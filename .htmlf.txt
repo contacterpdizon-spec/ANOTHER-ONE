@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🔬 STEM Quiz Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: #f5f7fa;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: 1.5rem auto;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      padding: 1.5rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      color: #a8e6ff;
+      text-shadow: 0 0 8px rgba(168, 230, 255, 0.5);
+    }
+    .score-display {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      color: #ffd8a8;
+    }
+    .question {
+      margin-bottom: 1.2rem;
+      padding: 1.2rem;
+      background: rgba(10, 25, 47, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(100, 180, 255, 0.4);
+    }
+    .question p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      color: #e8f4ff;
+    }
+    .option {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 0.8rem;
+      background: rgba(20, 40, 80, 0.7);
+      border: 1px solid rgba(100, 180, 255, 0.5);
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      color: #d0eaff;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .option:hover:not(:disabled) {
+      background: rgba(40, 80, 140, 0.8);
+    }
+    .option:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .feedback {
+      margin-top: 1rem;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+      font-weight: 500;
+    }
+    .correct { background: #0f5132; color: #d1e7dd; border: 1px solid #badbcc; }
+    .incorrect { background: #721c24; color: #f8d7da; border: 1px solid #f5c6cb; }
+    
+    .main-btn {
+      margin-top: 1.5rem;
+      padding: 12px;
+      width: 100%;
+      background: linear-gradient(90deg, #00b4db, #0083b0);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .main-btn:disabled { background: #4c566a; cursor: not-allowed; }
+
+    .final-card {
+      text-align: center;
+      padding: 20px;
+    }
+    .final-score-big {
+      font-size: 3rem;
+      color: #ffd8a8;
+      display: block;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🔬 STEM Quiz Game</h1>
+    
+    <div id="gameArea">
+      <div class="score-display">Score: <span id="score">0</span> / <span id="total">0</span></div>
+      <div class="question">
+        <p id="questionText"></p>
+        <div id="options"></div>
+        <div id="feedback" class="feedback"></div>
+        <button id="nextBtn" class="main-btn" disabled>Next Question</button>
+      </div>
+    </div>
+
+    <div id="finalResult" class="final-card" style="display: none;">
+      <h2>Quiz Complete!</h2>
+      <span id="finalScoreVal" class="final-score-big"></span>
+      <p id="finalPercent" style="margin-bottom: 15px;"></p>
+      <div id="messageBox" style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin-bottom:20px;"></div>
+      <button id="retryBtn" class="main-btn">Try Again 🔄</button>
+    </div>
+  </div>
+
+  <script>
+    const quizQuestions = [
+      { question: "What is the value of 3² + 4²?", options: ["7", "12", "25", "49"], answer: 2 },
+      { question: "If f(x) = 2x² - 3x + 1, what is f(2)?", options: ["3", "5", "7", "9"], answer: 2 },
+      { question: "In the equation ax + b = 0, what is the value of x?", options: ["x = a", "x = -b/a", "x = b/a", "x = -a/b"], answer: 1 },
+      { question: "Which law states that F = ma?", options: ["Law of inertia", "Law of acceleration", "Law of action-reaction", "Law of gravity"], answer: 1 },
+      { question: "What is the SI unit of force?", options: ["Joule", "Watt", "Newton", "Pascal"], answer: 2 },
+      { question: "Which quantity measures the rate of change of velocity?", options: ["Displacement", "Speed", "Velocity", "Acceleration"], answer: 3 },
+      { question: "What is the chemical symbol of gold?", options: ["Ag", "Au", "Fe", "Cu"], answer: 1 },
+      { question: "In a neutral atom, the number of protons equals the number of:", options: ["Neutrons", "Electrons", "Nucleons", "Ions"], answer: 1 },
+      { question: "Which of the following is a noble gas?", options: ["Oxygen", "Hydrogen", "Helium", "Nitrogen"], answer: 2 },
+      { question: "Which organelle is known as the 'powerhouse of the cell'?", options: ["Nucleus", "Ribosome", "Mitochondria", "Lysosome"], answer: 2 },
+      { question: "What process converts glucose and oxygen into energy in cells?", options: ["Photosynthesis", "Fermentation", "Cellular respiration", "Transpiration"], answer: 2 },
+      { question: "Which biomolecule stores genetic information?", options: ["Protein", "Carbohydrate", "Lipid", "Nucleic acid"], answer: 3 },
+      { question: "Which senior-high track focuses on 'Science, Technology, Engineering, and Mathematics'?", options: ["HUMSS", "ABM", "TVL", "STEM"], answer: 3 },
+      { question: "Which of the following is NOT a specialized subject in the STEM strand?", options: ["Pre-Calculus", "Basic Calculus", "General Biology 1", "Cookery"], answer: 3 },
+      { question: "Which Filipino scientist is known for his work on crop science and ‘father of green revolution’?", options: ["Maria Orosa", "Ramon Magsaysay", "Emil Javier", "Ramon Barba"], answer: 2 }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    const gameArea = document.getElementById("gameArea");
+    const finalResult = document.getElementById("finalResult");
+    const scoreElem = document.getElementById("score");
+    const totalElem = document.getElementById("total");
+    const questionText = document.getElementById("questionText");
+    const optionsElem = document.getElementById("options");
+    const feedbackElem = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+    const retryBtn = document.getElementById("retryBtn");
+
+    function startQuiz() {
+      current = 0;
+      score = 0;
+      scoreElem.textContent = "0";
+      totalElem.textContent = quizQuestions.length;
+      gameArea.style.display = "block";
+      finalResult.style.display = "none";
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = quizQuestions[current];
+      questionText.textContent = q.question;
+      optionsElem.innerHTML = "";
+      feedbackElem.style.display = "none";
+      nextBtn.disabled = true;
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.innerHTML = `<span style="margin-right:8px">🧪</span>${opt}`;
+        btn.onclick = () => handleAnswer(i);
+        optionsElem.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(index) {
+      const q = quizQuestions[current];
+      const correct = index === q.answer;
+      
+      Array.from(optionsElem.children).forEach(btn => btn.disabled = true);
+      
+      feedbackElem.style.display = "block";
+      if (correct) {
+        score++;
+        feedbackElem.className = "feedback correct";
+        feedbackElem.innerHTML = "✅ Correct!";
+      } else {
+        feedbackElem.className = "feedback incorrect";
+        feedbackElem.innerHTML = `❌ Incorrect. The answer is: ${q.options[q.answer]}`;
+      }
+      
+      scoreElem.textContent = score;
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.onclick = () => {
+      current++;
+      if (current < quizQuestions.length) {
+        loadQuestion();
+      } else {
+        showFinal();
+      }
+    };
+
+    function showFinal() {
+      gameArea.style.display = "none";
+      finalResult.style.display = "block";
+      
+      const percent = Math.round((score / quizQuestions.length) * 100);
+      document.getElementById("finalScoreVal").textContent = `${score} / ${quizQuestions.length}`;
+      document.getElementById("finalPercent").textContent = `Score Percentage: ${percent}%`;
+
+      let msg, icon;
+      if (score === 15) {
+        msg = "Perfect! You're thinking like a future scientist or engineer!";
+        icon = "🏆";
+      } else if (score >= 12) {
+        msg = "Excellent! You have a very strong grasp of STEM subjects.";
+        icon = "🚀";
+      } else {
+        msg = "Good effort! Review your notes and try for a perfect score!";
+        icon = "🔬";
+      }
+
+      document.getElementById("messageBox").innerHTML = `<h1>${icon}</h1><strong>${msg}</strong>`;
+    }
+
+    // This is the manual reset function
+    retryBtn.onclick = () => {
+      startQuiz();
+    };
+
+    // Initialize the quiz on page load
+    startQuiz();
+  </script>
+</body>
+</html>
